@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hive-metastore
+  namespace: data-platform
+  labels:
+    app: hive-metastore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hive-metastore
+  template:
+    metadata:
+      labels:
+        app: hive-metastore
+    spec:
+      initContainers:
+        - name: download-ext-jars
+          image: curlimages/curl:8.12.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -ec
+            - |
+              BASE=https://repo1.maven.org/maven2
+
+              curl -fL "$BASE/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar" \
+                -o /shared-lib/postgresql-42.7.3.jar
+
+              test -s /shared-lib/postgresql-42.7.3.jar
+              echo "All external JARs downloaded."
+          volumeMounts:
+            - name: ext-jars
+              mountPath: /shared-lib
+
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z -w 2 postgres.data-platform.svc.cluster.local 5432; do echo waiting for postgres; sleep 2; done;",
+            ]
+
+      containers:
+        - name: hive-metastore
+          image: apache/hive:standalone-metastore-4.2.1
+          env:
+            - name: METASTORE_CONF_DIR
+              value: /opt/hive-metastore/conf
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              export HIVE_HOME=/opt/hive-metastore
+              export PATH=$HIVE_HOME/bin:$PATH
+              export HADOOP_CLASSPATH=$HIVE_HOME/lib/*:$HIVE_HOME/lib/ext/*:$METASTORE_CONF_DIR
+
+              echo "Executing schematool against PostgreSQL..."
+              schematool -dbType postgres -initOrUpgradeSchema --verbose
+
+              echo "Starting Standalone Hive Metastore Service..."
+              start-metastore
+          ports:
+            - containerPort: 9083
+              name: thrift
+          volumeMounts:
+            - name: ext-jars
+              mountPath: /opt/hive-metastore/lib/ext
+            - name: config-volume
+              mountPath: /opt/hive-metastore/conf/metastore-site.xml
+              subPath: metastore-site.xml
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+      volumes:
+        - name: ext-jars
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: hive-metastore-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hive-metastore-config
+  namespace: data-platform
+data:
+  metastore-site.xml: |
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <!-- Existing Database Properties -->
+      <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:postgresql://postgres.data-platform.svc.cluster.local:5432/hive_metastore</value>
+      </property>
+      <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+      </property>
+      <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>postgres</value>
+      </property>
+      <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>postgres</value>
+      </property>
+      <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>s3a://source-data/warehouse/</value>
+      </property>
+      <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://0.0.0.0:9083</value>
+      </property>
+      <property>
+        <name>hive.metastore.schema.verification</name>
+        <value>false</value>
+      </property>
+
+      <!-- ADD THE NEW CONFIGURATIONS HERE -->
+      <!-- 1. Disable YARN-dependent housekeeping cleaner tasks -->
+      <property>
+        <name>hive.metastore.metastore.event.cleaner.enabled</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>metastore.compactor.initiator.on</name>
+        <value>false</value>
+      </property>
+      <property>
+        <name>metastore.compactor.worker.threads</name>
+        <value>0</value>
+      </property>
+
+      <!-- 2. Auto-create missing database schema tables -->
+      <property>
+        <name>datanucleus.schema.autoCreateAll</name>
+        <value>true</value>
+      </property>
+      <property>
+        <name>datanucleus.schema.autoCreateTables</name>
+        <value>true</value>
+      </property>
+    </configuration>
