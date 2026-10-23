@@ -4,7 +4,7 @@ import io
 
 from pyflink.common import Row
 from pyflink.common.typeinfo import Types
-from pyflink.datastream import StreamExecutionEnvironment
+from pyflink.datastream import StreamExecutionEnvironment, RuntimeExecutionMode
 from pyflink.datastream.connectors.file_system import (
     FileSource,
     FileSink,
@@ -14,6 +14,7 @@ from pyflink.datastream.formats.parquet import ParquetBulkWriters
 from pyflink.table.types import RowType, VarCharType, RowField
 from pyflink.common.watermark_strategy import WatermarkStrategy
 from pyflink.datastream.connectors.file_system import OutputFileConfig
+
 
 SOURCE = "s3://source-data/transaction/transactions.csv"
 DESTINATION = "s3://warehouse/batch/transaction/"
@@ -47,6 +48,7 @@ COLUMNS = [
 ]
 
 env = StreamExecutionEnvironment.get_execution_environment()
+env.set_runtime_mode(RuntimeExecutionMode.BATCH)
 env.set_parallelism(1)
 
 # Read a bounded file as lines.

@@ -28,23 +28,15 @@ down:
 	kubectl delete -f $(MANIFESTS_DIR)/seaweedfs.yaml --ignore-not-found
 	kubectl delete -f $(MANIFESTS_DIR)/namespace.yaml --ignore-not-found
 
-status:
-	kubectl get pods,svc -n $(NAMESPACE)
-
-logs-seaweed:
-	kubectl logs -n $(NAMESPACE) -l app=seaweedfs --tail=100 -f
-
-logs-flink:
-	kubectl logs -n $(NAMESPACE) -l app=flink --tail=100 -f
-
-logs-hms:
-	kubectl logs -n $(NAMESPACE) -l app=hive-metastore --tail=100 -f
-
-logs-spark:
-	kubectl logs -n $(NAMESPACE) -l app=spark --tail=100 -f
-
-copy-batch:
-	@echo "Copying batch job to Flink JobManager pod..."
+copy-jobs:
 	@JOB_MANAGER_POD=$$(kubectl get pods -n $(NAMESPACE) -l app=flink,component=jobmanager -o jsonpath='{.items[0].metadata.name}'); \
-	kubectl cp ./etl_batch.py $$JOB_MANAGER_POD:/opt/flink/jobs/workshop/etl_batch.py -n $(NAMESPACE)
-	@echo "Batch job copied successfully."
+	kubectl cp ./jobs $$JOB_MANAGER_POD:/opt/flink -n $(NAMESPACE)
+
+submit-py-job:
+	@if [ -z "$(JOB_NAME)" ]; then \
+		echo "Error: JOB_NAME is required."; \
+		echo "Usage: make submit-py-job JOB_NAME=<your_script.py>"; \
+		exit 1; \
+	fi; \
+	JOB_MANAGER_POD=$$(kubectl get pods -n $(NAMESPACE) -l app=flink,component=jobmanager -o jsonpath='{.items[0].metadata.name}'); \
+	kubectl exec -n $(NAMESPACE) $$JOB_MANAGER_POD -- /opt/flink/bin/flink run -py /opt/flink/jobs/$(JOB_NAME)

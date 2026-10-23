@@ -1,21 +1,30 @@
-FROM flink:2.3-scala_2.12-java21
+
+FROM flink:2.2.1-scala_2.12-java21
 
 USER root
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    python3 python3-venv python3-pip python3-dev build-essential curl \
+    python3 python3-venv python3-pip python3-dev \
+    build-essential curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/pyflink-venv \
-    && /opt/pyflink-venv/bin/pip install --no-cache-dir apache-flink==2.3.0 \
+    && /opt/pyflink-venv/bin/pip install --no-cache-dir apache-flink==2.2.1 \
     && chown -R flink:flink /opt/pyflink-venv
 
-# Hadoop / Parquet runtime dependencies
-# Flink Parquet connector
+# Kafka connector for Flink 2.2
 RUN curl -fsSL \
-    https://repo.maven.apache.org/maven2/org/apache/flink/flink-parquet/2.3.0/flink-parquet-2.3.0.jar \
-    -o /opt/flink/lib/flink-parquet-2.3.0.jar \
+    https://repo.maven.apache.org/maven2/org/apache/flink/flink-connector-kafka/5.0.0-2.2/flink-connector-kafka-5.0.0-2.2.jar \
+    -o /opt/flink/lib/flink-connector-kafka-5.0.0-2.2.jar \
+    && curl -fsSL \
+    https://repo.maven.apache.org/maven2/org/apache/kafka/kafka-clients/4.2.0/kafka-clients-4.2.0.jar \
+    -o /opt/flink/lib/kafka-clients-4.2.0.jar
+
+# Parquet connector
+RUN curl -fsSL \
+    https://repo.maven.apache.org/maven2/org/apache/flink/flink-parquet/2.2.1/flink-parquet-2.2.1.jar \
+    -o /opt/flink/lib/flink-parquet-2.2.1.jar \
     && curl -fsSL \
     https://repo.maven.apache.org/maven2/org/apache/parquet/parquet-hadoop/1.15.2/parquet-hadoop-1.15.2.jar \
     -o /opt/flink/lib/parquet-hadoop-1.15.2.jar \
@@ -42,8 +51,10 @@ RUN curl -fsSL \
     -o /opt/flink/lib/protobuf-java-4.32.1.jar \
     && curl -fsSL \
     https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.6-6/zstd-jni-1.5.6-6.jar \
-    -o /opt/flink/lib/zstd-jni-1.5.6-6.jar \
-    && curl -fsSL \
+    -o /opt/flink/lib/zstd-jni-1.5.6-6.jar
+
+# Hadoop dependencies used by the existing Parquet setup
+RUN curl -fsSL \
     https://repo.maven.apache.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar \
     -o /opt/flink/lib/hadoop-common-3.3.4.jar \
     && curl -fsSL \
@@ -57,7 +68,7 @@ RUN curl -fsSL \
     -o /opt/flink/lib/stax2-api-4.2.1.jar \
     && curl -fsSL \
     https://repo.maven.apache.org/maven2/org/apache/hadoop/hadoop-mapreduce-client-core/3.3.4/hadoop-mapreduce-client-core-3.3.4.jar \
-    -o /opt/flink/lib/hadoop-mapreduce-client-core-3.3.4.jar 
+    -o /opt/flink/lib/hadoop-mapreduce-client-core-3.3.4.jar
 
 ENV PATH="/opt/pyflink-venv/bin:${PATH}"
 

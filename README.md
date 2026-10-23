@@ -26,7 +26,7 @@ Before starting the hands-on session, ensure you have the following tools instal
 ### Step 1: Build new Flink Image
 Re-build Flink image and install python + apache-flink package:
 ```bash
-minikube image build -t flink-pyflink:2.3.0 . -f Flink.Dockerfile
+minikube image build -f Flink.Dockerfile  -t flink-pyflink:2.2.1 .
 ```
 
 ### Step 2: Spin Up Infrastructure
@@ -36,8 +36,17 @@ Deploy the local environment by running the following command in your terminal:
 make up
 ```
 
-### Step 3: Data Ingestion (ETL)
-Open `etl.ipynb` in your environment and follow the instructions to ingest raw data `from s3://source_data` and stream/dump it into the warehouse using Flink.
+### Step 3: Setting up Kafka
+Create new Kafka topic from Kafka UI, open `http://localhost:8084/ui/clusters/local-kafka/all-topics` then click `New Topic` on top-right of the interface, then fill the form with:
 
-### Step 4: Data Processing and Analytics
-Open `analytics.ipynb` and follow the guided tasks to query the warehouse via PySpark, extract business metrics, and derive actionable insights.# de-workshop
+- Topic Name: transactions
+- Number of Partitions: 3
+- Replication Factor: 1
+
+Leave the other options default and then click `Create Topic`
+
+### Step 4: Copy jobs to Flink
+Run `make copy-jobs` to copy files from local which is inside `jobs` folder to Flink in order to submit the job later into Flink.
+
+### Step 5: Submit your first Flink Job
+run `make submit-py-job JOB_NAME={script.py}` replace `script.py` to the actual file name that already been copied into the Job Manager pod from step 4.

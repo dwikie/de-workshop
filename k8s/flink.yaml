@@ -92,22 +92,22 @@ spec:
     spec:
       initContainers:
         - name: install-s3-plugin
-          image: flink-pyflink:2.3.0-parquet-test5
-          imagePullPolicy: IfNotPresent
+          image: flink-pyflink:2.2.1
+          imagePullPolicy: Never
           command:
             - sh
             - -ec
             - |
-              cp /opt/flink/opt/flink-s3-fs-hadoop-2.3.0.jar \
-                /plugin/flink-s3-fs-hadoop-2.3.0.jar
+              cp /opt/flink/opt/flink-s3-fs-hadoop-2.2.1.jar \
+                /plugin/flink-s3-fs-hadoop-2.2.1.jar
               ls -lh /plugin/
           volumeMounts:
             - name: flink-s3-plugin
               mountPath: /plugin
       containers:
         - name: jobmanager
-          image: flink-pyflink:2.3.0-parquet-test5
-          imagePullPolicy: IfNotPresent
+          image: flink-pyflink:2.2.1
+          imagePullPolicy: Never
           securityContext:
             runAsUser: 0
 
@@ -165,22 +165,22 @@ spec:
     spec:
       initContainers:
         - name: install-s3-plugin
-          image: flink-pyflink:2.3.0-parquet-test5
-          imagePullPolicy: IfNotPresent
+          image: flink-pyflink:2.2.1
+          imagePullPolicy: Never
           command:
             - sh
             - -ec
             - |
-              cp /opt/flink/opt/flink-s3-fs-hadoop-2.3.0.jar \
-                /plugin/flink-s3-fs-hadoop-2.3.0.jar
+              cp /opt/flink/opt/flink-s3-fs-hadoop-2.2.1.jar \
+                /plugin/flink-s3-fs-hadoop-2.2.1.jar
               ls -lh /plugin/
           volumeMounts:
             - name: flink-s3-plugin
               mountPath: /plugin
       containers:
         - name: taskmanager
-          image: flink-pyflink:2.3.0-parquet-test5
-          imagePullPolicy: IfNotPresent
+          image: flink-pyflink:2.2.1
+          imagePullPolicy: Never
           securityContext:
             runAsUser: 0
           command: ["/docker-entrypoint.sh"]
