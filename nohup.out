@@ -1,0 +1,17 @@
+* Mounting host path /home/dwiki/project/workshop-de-sv-1/jobs into VM as /mnt/airflow-dags ...
+  - Mount type:   9p
+  - User ID:      docker
+  - Group ID:     docker
+  - Version:      9p2000.L
+  - Message Size: 262144
+  - Options:      map[]
+  - Bind Address: 172.22.181.27:39775
+* Userspace file server: 
+ufs starting
+* Successfully mounted /home/dwiki/project/workshop-de-sv-1/jobs to /mnt/airflow-dags
+
+* NOTE: This process must stay alive for the mount to be accessible ...
+* Unmounting /mnt/airflow-dags ...
+
+X Exiting due to MK_INTERRUPTED: Received interrupt signal
+

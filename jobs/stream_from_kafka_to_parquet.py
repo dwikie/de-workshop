@@ -18,13 +18,13 @@ from pyflink.common.serialization import SimpleStringSchema
 
 # Example Kafka message:
 # {
-#         "transaction_id": "txn-000005",
-#         "account_id": "acct-0048",
-#         "amount": 2400.00,
-#         "currency": "USD",
-#         "event_time": "2026-10-23T10:15:32Z",
-#         "country": "ID",
-#         "status": "APPROVED"
+#     "transaction_id": "txn-000005",
+#     "account_id": "acct-0048",
+#     "amount": 2400.00,
+#     "currency": "USD",
+#     "event_time": "2026-10-23T10:15:32Z",
+#     "country": "ID",
+#     "status": "APPROVED"
 # }
 
 BOOTSTRAP_SERVERS = os.getenv(
@@ -44,7 +44,7 @@ env = StreamExecutionEnvironment.get_execution_environment()
 env.set_runtime_mode(RuntimeExecutionMode.STREAMING)
 env.set_parallelism(1)
 
-env.enable_checkpointing(30_0000)
+env.enable_checkpointing(10_000)
 
 # Kafka source
 source = (

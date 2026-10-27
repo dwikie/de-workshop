@@ -5,10 +5,14 @@ metadata:
   namespace: data-platform
 data:
   config.yaml: |
-    jobmanager.rpc.address: flink-jobmanager
+    jobmanager.rpc.address: flink-jobmanager.data-platform.svc.cluster.local
     jobmanager.rpc.port: 6123
     blob.server.port: 6124
     query.server.port: 6125
+
+    rest.address: flink-jobmanager.data-platform.svc.cluster.local
+    rest.bind-address: 0.0.0.0
+    rest.port: 8081
 
     env.java.opts.all: --add-opens=java.base/java.util=ALL-UNNAMED
 
@@ -28,7 +32,7 @@ data:
 
     # Persistent checkpoint state in SeaweedFS
     execution.checkpointing.storage: filesystem
-    execution.checkpointing.dir: s3a://warehouse/flink-checkpoints/orders-job/
+    execution.checkpointing.dir: s3a://warehouse/flink-checkpoints/
 
     # Python dependencies for PyFlink
     python.executable: /opt/pyflink-venv/bin/python
@@ -90,20 +94,6 @@ spec:
         app: flink
         component: jobmanager
     spec:
-      initContainers:
-        - name: install-s3-plugin
-          image: flink-pyflink:2.2.1
-          imagePullPolicy: Never
-          command:
-            - sh
-            - -ec
-            - |
-              cp /opt/flink/opt/flink-s3-fs-hadoop-2.2.1.jar \
-                /plugin/flink-s3-fs-hadoop-2.2.1.jar
-              ls -lh /plugin/
-          volumeMounts:
-            - name: flink-s3-plugin
-              mountPath: /plugin
       containers:
         - name: jobmanager
           image: flink-pyflink:2.2.1
@@ -127,8 +117,6 @@ spec:
             - name: pyflink-test-file-volume
               mountPath: /opt/flink/examples/pyflink/ui_test.py
               subPath: ui_test.py
-            - name: flink-s3-plugin
-              mountPath: /opt/flink/plugins/s3-fs-hadoop
           resources:
             requests:
               memory: "1800Mi"
@@ -143,8 +131,6 @@ spec:
         - name: pyflink-test-file-volume
           configMap:
             name: pyflink-test-file
-        - name: flink-s3-plugin
-          emptyDir: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -163,20 +149,6 @@ spec:
         app: flink
         component: taskmanager
     spec:
-      initContainers:
-        - name: install-s3-plugin
-          image: flink-pyflink:2.2.1
-          imagePullPolicy: Never
-          command:
-            - sh
-            - -ec
-            - |
-              cp /opt/flink/opt/flink-s3-fs-hadoop-2.2.1.jar \
-                /plugin/flink-s3-fs-hadoop-2.2.1.jar
-              ls -lh /plugin/
-          volumeMounts:
-            - name: flink-s3-plugin
-              mountPath: /plugin
       containers:
         - name: taskmanager
           image: flink-pyflink:2.2.1
@@ -194,8 +166,6 @@ spec:
             - name: flink-config-volume
               mountPath: /opt/flink/conf/config.yaml
               subPath: config.yaml
-            - name: flink-s3-plugin
-              mountPath: /opt/flink/plugins/s3-fs-hadoop
           resources:
             requests:
               memory: "1800Mi"
@@ -207,5 +177,3 @@ spec:
         - name: flink-config-volume
           configMap:
             name: flink-config
-        - name: flink-s3-plugin
-          emptyDir: {}

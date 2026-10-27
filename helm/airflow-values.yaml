@@ -1,0 +1,80 @@
+executor: LocalExecutor
+
+# Airflow 3 Execution API
+config:
+  core:
+    execution_api_server_url: "http://airflow-api-server.data-platform.svc.cluster.local:8089/execution/"
+
+# No Celery or Redis needed
+redis:
+  enabled: false
+
+workers:
+  celery:
+    replicas: 0
+
+scheduler:
+  enabled: true
+  replicas: 1
+  extraVolumes:
+    - name: local-dags
+      hostPath:
+        path: /mnt/jobs/dags
+        type: Directory
+  extraVolumeMounts:
+    - name: local-dags
+      mountPath: /opt/airflow/dags
+      readOnly: true
+
+apiServer:
+  enabled: true
+  replicas: 1
+  service:
+    type: LoadBalancer
+    ports:
+      - name: api-server
+        port: 8089
+        targetPort: 8080
+
+dagProcessor:
+  enabled: true
+  replicas: 1
+  extraVolumes:
+    - name: local-dags
+      hostPath:
+        path: /mnt/jobs/dags
+        type: Directory
+  extraVolumeMounts:
+    - name: local-dags
+      mountPath: /opt/airflow/dags
+      readOnly: true
+
+triggerer:
+  enabled: true
+  replicas: 1
+
+postgresql:
+  enabled: true
+  auth:
+    enablePostgresUser: true
+    postgresPassword: "postgres"
+  primary:
+    persistence:
+      enabled: true
+      size: 2Gi
+
+createUserJob:
+  enabled: true
+  defaultUser:
+    username: admin
+    password: "admin"
+    role: Admin
+    email: admin@example.com
+    firstName: Airflow
+    lastName: Admin
+
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: false
