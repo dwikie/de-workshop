@@ -63,6 +63,19 @@ airflow-stop:
 	helm uninstall airflow --namespace $(NAMESPACE)
 	@echo "Airflow webserver and scheduler stopped successfully."
 
-airflow-mount-dags:
+spark-start:
+	@echo "Starting Spark..."
+	helm upgrade\
+		--install spark-operator spark-operator/spark-operator\
+		--namespace $(NAMESPACE)\
+		--create-namespace\
+		--values $(HELM_DIR)/spark-operator-values.yaml
+
+spark-stop:
+	@echo "Stopping Spark..."
+	helm uninstall spark-operator --namespace $(NAMESPACE)
+	@echo "Spark stopped successfully."
+
+mount-jobs:
 	@echo "Mounting DAGs to Airflow..."
 	minikube mount $(JOBS_DIR):/mnt/jobs

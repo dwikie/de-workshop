@@ -36,7 +36,7 @@ GROUP_ID = os.getenv("KAFKA_GROUP_ID", "transactions-parquet-v1")
 
 OUTPUT_PATH = os.getenv(
     "OUTPUT_PATH",
-    "s3a://sink/transactions/",
+    "s3a://bronze/transactions/",
 )
 
 # Flink execution environment
@@ -137,4 +137,8 @@ sink = (
 
 transactions.sink_to(sink)
 
+print(f"Effective OUTPUT_PATH: {OUTPUT_PATH}", flush=True)
+print(f"Kafka topic: {TOPIC}", flush=True)
+
 env.execute("kafka-transactions-to-parquet")
+

@@ -1,0 +1,9 @@
+spark:
+  jobNamespaces:
+    - data-platform
+  serviceAccount:
+    create: true
+metrics:
+  enable: true
+webhook:
+  enable: true

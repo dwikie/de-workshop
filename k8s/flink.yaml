@@ -37,6 +37,14 @@ data:
     # Python dependencies for PyFlink
     python.executable: /opt/pyflink-venv/bin/python
     python.client.executable: /opt/pyflink-venv/bin/python
+  hive-site.xml: |
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <configuration>
+      <property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive-metastore.data-platform.svc.cluster.local:9083</value>
+      </property>
+    </configuration>
 ---
 apiVersion: v1
 kind: ConfigMap
