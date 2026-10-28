@@ -1,4 +1,3 @@
-
 FROM flink:2.2.1-scala_2.12-java21
 
 USER root
@@ -69,6 +68,19 @@ RUN curl -fsSL \
     && curl -fsSL \
     https://repo.maven.apache.org/maven2/org/apache/hadoop/hadoop-mapreduce-client-core/3.3.4/hadoop-mapreduce-client-core-3.3.4.jar \
     -o /opt/flink/lib/hadoop-mapreduce-client-core-3.3.4.jar
+
+# Iceberg connector for Flink 2.2
+RUN curl -fsSL \
+    https://repo.maven.apache.org/maven2/org/apache/iceberg/iceberg-flink-runtime-2.2/1.12.0/iceberg-flink-runtime-2.2-1.12.0.jar \
+    -o /opt/flink/lib/iceberg-flink-runtime-2.2-1.12.0.jar \
+    && curl -fsSL \
+    https://repo.maven.apache.org/maven2/org/apache/iceberg/iceberg-aws-bundle/1.12.0/iceberg-aws-bundle-1.12.0.jar \
+    -o /opt/flink/lib/iceberg-aws-bundle-1.12.0.jar
+
+RUN mkdir -p /opt/flink/plugins/s3-fs-hadoop \
+    && cp /opt/flink/opt/flink-s3-fs-hadoop-2.2.1.jar \
+    /opt/flink/plugins/s3-fs-hadoop/ \
+    && chown -R flink:flink /opt/flink/plugins/s3-fs-hadoop
 
 ENV PATH="/opt/pyflink-venv/bin:${PATH}"
 

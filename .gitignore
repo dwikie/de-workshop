@@ -1,1 +1,4 @@
-.vscode
+nohup.out
+
+datasets/*
+helm/*-rendered.yaml

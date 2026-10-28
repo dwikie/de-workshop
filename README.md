@@ -26,7 +26,8 @@ Before starting the hands-on session, ensure you have the following tools instal
 ### Step 1: Build new Flink Image
 Re-build Flink image and install python + apache-flink package:
 ```bash
-minikube image build -f Flink.Dockerfile  -t flink-pyflink:2.2.1 .
+minikube image build -f Dockerfile.Flink  -t flink-pyflink:2.2.1 .
+minikube image build -f Dockerfile.Spark  -t spark-iceberg:3.5.5 .
 ```
 
 ### Step 2: Spin Up Infrastructure
